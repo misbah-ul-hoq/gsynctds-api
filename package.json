@@ -6,7 +6,7 @@
   "keywords": [],
   "author": "Md Mezbah Uddin",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "build": "npx tsc",
     "start": "node dist/server.js",
