@@ -53,6 +53,9 @@ importers:
       nodemailer:
         specifier: ^6.9.16
         version: 6.10.0
+      passport-google-oidc:
+        specifier: ^0.1.0
+        version: 0.1.0
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -2050,6 +2053,9 @@ packages:
     resolution: {integrity: sha512-AqZtDUWOMKs1G/8lwylVjrdYgqA4d9nu8hc+0gzRxlDb1I10+FHBGMXs6aiQHFdCUUlqH99MUMuLfzWDNDtfxw==}
     deprecated: This package is no longer supported.
 
+  oauth@0.10.0:
+    resolution: {integrity: sha512-1orQ9MT1vHFGQxhuy7E/0gECD3fd2fCC+PIX+/jgmU/gI3EpRocXtmtvxCO5x3WZ443FLTLFWNDjl5MPJf9u+Q==}
+
   object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
@@ -2102,6 +2108,18 @@ packages:
   parseurl@1.3.3:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
+
+  passport-google-oidc@0.1.0:
+    resolution: {integrity: sha512-/TtFXaWvmubm5kXNoJMyzBfxhnZ0lnBPA6w6rmQMP9klmHZf0ArE8IrIEt3yAHoiDzGx4eTO7YasKQFbPsNtVA==}
+    engines: {node: '>= 0.4.0'}
+
+  passport-openidconnect@0.1.2:
+    resolution: {integrity: sha512-JX3rTyW+KFZ/E9OF/IpXJPbyLO9vGzcmXB5FgSP2jfL3LGKJPdV7zUE8rWeKeeI/iueQggOeFa3onrCmhxXZTg==}
+    engines: {node: '>= 0.6.0'}
+
+  passport-strategy@1.0.0:
+    resolution: {integrity: sha512-CB97UUvDKJde2V0KDWWB3lyf6PC3FaZP7YxZ2G8OAtn9p4HI9j9JLP9qjOGZFvyl8uwNT8qM+hGnz/n16NI7oA==}
+    engines: {node: '>= 0.4.0'}
 
   path-browserify@1.0.1:
     resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
@@ -5003,6 +5021,8 @@ snapshots:
       gauge: 3.0.2
       set-blocking: 2.0.0
 
+  oauth@0.10.0: {}
+
   object-assign@4.1.1: {}
 
   object-inspect@1.13.4: {}
@@ -5049,6 +5069,17 @@ snapshots:
   parse-ms@2.1.0: {}
 
   parseurl@1.3.3: {}
+
+  passport-google-oidc@0.1.0:
+    dependencies:
+      passport-openidconnect: 0.1.2
+
+  passport-openidconnect@0.1.2:
+    dependencies:
+      oauth: 0.10.0
+      passport-strategy: 1.0.0
+
+  passport-strategy@1.0.0: {}
 
   path-browserify@1.0.1: {}
 

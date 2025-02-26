@@ -168,10 +168,12 @@ authRoutes.get("/me", async (req, res) => {
       authToken as string,
       process.env.JWT_SECRET as string
     );
-    console.log(decoded);
-    const user = await User.findById((decoded as jwt.JwtPayload)._id).select(
-      "-password"
-    );
+    const user = await User.findById((decoded as jwt.JwtPayload)._id).select([
+      "-password",
+      "-secret",
+      "-otp",
+      "-otpExpires",
+    ]);
     res.send(user);
   } catch (error) {
     // @ts-ignore
