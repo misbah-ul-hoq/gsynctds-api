@@ -6,13 +6,22 @@ const app = express();
 
 let origin;
 if (process.env.NODE_ENV === "development") {
-  origin = "http://localhost:3000";
+  origin = ["http://localhost:3000"];
 } else {
-  origin = "https://gsynctds.vercel.app";
+  origin = ["https://gsynctds.vercel.app"];
 }
+
 // Middlewares
+app.use(
+  cors({
+    origin,
+    credentials: true,
+    allowedHeaders: ["Authorization", "authToken", "Content-Type", "authtoken"],
+    exposedHeaders: ["authToken"],
+    methods: ["POST", "GET", "PUT", "PATCH", "DELETE"],
+  })
+);
 app.use(express.json());
-app.use(cors({ origin }));
 
 // Routes
 routes(app);

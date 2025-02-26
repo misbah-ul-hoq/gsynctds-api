@@ -17,7 +17,6 @@ const transporter = nodemailer.createTransport({
 
 authRoutes.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
-  console.log("request accepted");
   const userExists = await User.findOne({ email });
   if (userExists)
     return res.status(401).send({ message: "User already exists" });
@@ -69,7 +68,12 @@ authRoutes.post("/login", async (req, res) => {
 authRoutes.post("/verify-email-otp", async (req, res) => {
   const { email, otp } = req.body;
   const user = await User.findOne({ email });
-  if (!user || user.otp !== otp || user.otpExpires < new Date())
+  if (
+    !user ||
+    user.otp !== otp ||
+    !user.otpExpires ||
+    user.otpExpires < new Date()
+  )
     return res.status(404).send({ message: "Invalid OTP" });
 
   qrcode.toDataURL(user?.secret?.otpauth_url || "", function (err, url) {
