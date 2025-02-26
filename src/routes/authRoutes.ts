@@ -5,6 +5,11 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import qrcode from "qrcode";
 import nodemailer from "nodemailer";
+import passport from "passport";
+// @ts-ignore
+import passportAuth from "passport-google-oauth20";
+const GoogleStrategy = passportAuth.Strategy;
+
 import User from "../models/User";
 
 dotenv.config();
@@ -156,6 +161,7 @@ authRoutes.post("/verify-authenticator-otp", async (req, res) => {
 });
 
 authRoutes.get("/me", async (req, res) => {
+  // TODO
   const authToken = req.headers.authtoken;
   // const authToken =
   //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
@@ -180,5 +186,32 @@ authRoutes.get("/me", async (req, res) => {
     res.send({ message: error?.message });
   }
 });
+
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      // callbackURL: "http://www.example.com/auth/google/callback",
+    },
+    // @ts-ignore
+    function (accessToken, refreshToken, profile, cb) {
+      return { accessToken, refreshToken, profile };
+    }
+  )
+);
+authRoutes.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile"] })
+);
+
+authRoutes.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/");
+  }
+);
 
 export { authRoutes };
