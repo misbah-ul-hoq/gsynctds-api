@@ -155,4 +155,28 @@ authRoutes.post("/verify-authenticator-otp", async (req, res) => {
   });
 });
 
+authRoutes.get("/me", async (req, res) => {
+  const authToken = req.headers.authtoken;
+  // const authToken =
+  //   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
+
+  if (!authToken) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+  try {
+    const decoded = jwt.verify(
+      authToken as string,
+      process.env.JWT_SECRET as string
+    );
+    console.log(decoded);
+    const user = await User.findById((decoded as jwt.JwtPayload)._id).select(
+      "-password"
+    );
+    res.send(user);
+  } catch (error) {
+    // @ts-ignore
+    res.send({ message: error?.message });
+  }
+});
+
 export { authRoutes };
