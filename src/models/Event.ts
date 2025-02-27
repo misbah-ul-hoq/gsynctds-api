@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const eventSchema = new Schema({
   summary: { type: String, required: true },
@@ -17,4 +17,18 @@ const eventSchema = new Schema({
       default: Intl.DateTimeFormat().resolvedOptions().timeZone,
     },
   },
+  status: {
+    type: String,
+    enum: ["confirmed", "tentative", "cancelled"],
+    default: "confirmed",
+  },
+  priority: {
+    type: String,
+    enum: ["high", "medium", "low"],
+    default: "medium",
+  },
 });
+
+const Event = mongoose.model("Event", eventSchema);
+
+export default Event;
