@@ -5,9 +5,10 @@ import Event from "../models/Event";
 const eventRoutes = e.Router();
 
 eventRoutes.post("/", verifyUser, async (req, res) => {
-  const { summary, description, start, end, status, priority } = req.body;
+  const { id, summary, description, start, end, status, priority } = req.body;
 
   const event = await new Event({
+    id,
     summary,
     description,
     start,
@@ -33,8 +34,8 @@ eventRoutes.get("/:id", verifyUser, async (req, res) => {
 eventRoutes.put("/:id", verifyUser, async (req, res) => {
   const { id } = req.params;
   const { summary, description, start, end, status, priority } = req.body;
-  const event = await Event.findByIdAndUpdate(
-    id,
+  const event = await Event.findOneAndUpdate(
+    { id },
     {
       summary,
       description,
@@ -50,7 +51,7 @@ eventRoutes.put("/:id", verifyUser, async (req, res) => {
 
 eventRoutes.delete("/:id", verifyUser, async (req, res) => {
   const { id } = req.params;
-  const event = await Event.findByIdAndDelete(id);
+  const event = await Event.findOneAndDelete({ id });
   res.send(event);
 });
 

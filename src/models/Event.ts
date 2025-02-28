@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 
 const eventSchema = new Schema({
+  id: { type: String, required: false },
   summary: { type: String, required: true },
   description: { type: String, required: true },
   start: {
