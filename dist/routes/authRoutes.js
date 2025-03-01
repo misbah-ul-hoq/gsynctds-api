@@ -20,10 +20,6 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const qrcode_1 = __importDefault(require("qrcode"));
 const nodemailer_1 = __importDefault(require("nodemailer"));
-const passport_1 = __importDefault(require("passport"));
-// @ts-ignore
-const passport_google_oauth20_1 = __importDefault(require("passport-google-oauth20"));
-const GoogleStrategy = passport_google_oauth20_1.default.Strategy;
 const User_1 = __importDefault(require("../models/User"));
 dotenv_1.default.config();
 const authRoutes = express_1.default.Router();
@@ -177,17 +173,3 @@ authRoutes.get("/me", (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.send({ message: error === null || error === void 0 ? void 0 : error.message });
     }
 }));
-passport_1.default.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    // callbackURL: "http://www.example.com/auth/google/callback",
-}, 
-// @ts-ignore
-function (accessToken, refreshToken, profile, cb) {
-    return { accessToken, refreshToken, profile };
-}));
-authRoutes.get("/google", passport_1.default.authenticate("google", { scope: ["profile"] }));
-authRoutes.get("/google/callback", passport_1.default.authenticate("google", { failureRedirect: "/login" }), function (req, res) {
-    // Successful authentication, redirect home.
-    res.redirect("/");
-});
