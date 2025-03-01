@@ -43,6 +43,7 @@ eventRoutes.post("/", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, v
 // sync all post events
 eventRoutes.post("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id, accessToken } = req.body;
+    const email = req.headers.email;
     if (!accessToken)
         return res.send({ message: "Must login with google to sync events." });
     // the event is saved at mongodb first then synced to google calendar
@@ -87,6 +88,7 @@ eventRoutes.post("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 
             if (!eventExists) {
                 return yield new Event_1.default({
                     id: event.id,
+                    email,
                     summary: event.summary,
                     description: event.description || " ",
                     start: event.start,

@@ -44,6 +44,7 @@ eventRoutes.post("/", verifyUser, async (req, res) => {
 // sync all post events
 eventRoutes.post("/sync", verifyUser, async (req, res) => {
   const { _id, accessToken } = req.body;
+  const email = req.headers.email as string;
   if (!accessToken)
     return res.send({ message: "Must login with google to sync events." });
 
@@ -94,6 +95,7 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
       if (!eventExists) {
         return await new Event({
           id: event.id,
+          email,
           summary: event.summary,
           description: event.description || " ",
           start: event.start,
