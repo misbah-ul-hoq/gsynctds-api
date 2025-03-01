@@ -214,12 +214,8 @@ eventRoutes.put("/sync", verifyUser, async (req, res) => {
 });
 
 eventRoutes.get("/", verifyUser, async (req, res) => {
-  const authToken = req.headers.authtoken;
-  const isValid = jwt.verify(
-    authToken as string,
-    process.env.JWT_SECRET as string
-  );
-  const events = await Event.find({});
+  const { email } = req.headers;
+  const events = await Event.find({ email });
   res.send(events);
 });
 
