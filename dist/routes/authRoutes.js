@@ -132,11 +132,12 @@ authRoutes.post("/verify-authenticator-otp", (req, res) => __awaiter(void 0, voi
     const { email, otp } = req.body;
     const user = yield User_1.default.findOne({ email });
     if (!user)
-        return res.status(404).send({ message: "Invalid OTP" });
+        return res.status(404).send({ message: "Invalid Credentials" });
     const verified = speakeasy_1.default.totp.verify({
         secret: (_a = user === null || user === void 0 ? void 0 : user.secret) === null || _a === void 0 ? void 0 : _a.base32,
         encoding: "base32",
         token: otp,
+        window: 3,
     });
     if (!verified)
         return res.status(401).send({ message: "Invalid OTP" });
