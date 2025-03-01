@@ -13,17 +13,22 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const verifyUser_1 = require("../middlewares/verifyUser");
 const Event_1 = __importDefault(require("../models/Event"));
 const fetchGoogleCalendar_1 = require("../utils/functions/fetchGoogleCalendar");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+dotenv_1.default.config();
 const eventRoutes = express_1.default.Router();
 eventRoutes.post("/", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id, summary, description, start, end, status, priority, accessToken, } = req.body;
+    const email = req.headers.email;
     let event;
     if (!id) {
         // save the event to mongodb.
         event = yield new Event_1.default({
             summary,
+            email,
             description,
             start,
             end,
@@ -191,6 +196,8 @@ eventRoutes.put("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0
     });
 }));
 eventRoutes.get("/", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const authToken = req.headers.authtoken;
+    const isValid = jsonwebtoken_1.default.verify(authToken, process.env.JWT_SECRET);
     const events = yield Event_1.default.find({});
     res.send(events);
 }));

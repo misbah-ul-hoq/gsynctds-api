@@ -148,11 +148,15 @@ authRoutes.post("/verify-authenticator-otp", async (req, res) => {
     user.twoFactorAuthenticationEnabled = true;
     await user.save();
   }
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET as string);
+  const token = jwt.sign(
+    { _id: user._id, email: user.email },
+    process.env.JWT_SECRET as string
+  );
 
   res.send({
     message: "OTP verified successfully",
     authToken: token,
+    email: user.email,
   });
 });
 

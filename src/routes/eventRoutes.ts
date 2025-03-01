@@ -1,8 +1,11 @@
 import e from "express";
+import dotenv from "dotenv";
 import { verifyUser } from "../middlewares/verifyUser";
 import Event from "../models/Event";
 import { fetchGoogleCalendar } from "../utils/functions/fetchGoogleCalendar";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
+dotenv.config();
 const eventRoutes = e.Router();
 
 eventRoutes.post("/", verifyUser, async (req, res) => {
@@ -16,11 +19,15 @@ eventRoutes.post("/", verifyUser, async (req, res) => {
     priority,
     accessToken,
   } = req.body;
+
+  const email = req.headers.email as string;
   let event;
+
   if (!id) {
     // save the event to mongodb.
     event = await new Event({
       summary,
+      email,
       description,
       start,
       end,
@@ -207,6 +214,11 @@ eventRoutes.put("/sync", verifyUser, async (req, res) => {
 });
 
 eventRoutes.get("/", verifyUser, async (req, res) => {
+  const authToken = req.headers.authtoken;
+  const isValid = jwt.verify(
+    authToken as string,
+    process.env.JWT_SECRET as string
+  );
   const events = await Event.find({});
   res.send(events);
 });

@@ -144,10 +144,11 @@ authRoutes.post("/verify-authenticator-otp", (req, res) => __awaiter(void 0, voi
         user.twoFactorAuthenticationEnabled = true;
         yield user.save();
     }
-    const token = jsonwebtoken_1.default.sign({ _id: user._id }, process.env.JWT_SECRET);
+    const token = jsonwebtoken_1.default.sign({ _id: user._id, email: user.email }, process.env.JWT_SECRET);
     res.send({
         message: "OTP verified successfully",
         authToken: token,
+        email: user.email,
     });
 }));
 authRoutes.get("/me", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
