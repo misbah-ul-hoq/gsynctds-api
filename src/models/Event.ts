@@ -28,6 +28,9 @@ const eventSchema = new Schema({
     enum: ["high", "medium", "low"],
     default: "medium",
   },
+  isSavedToCalendar: { type: Boolean, default: false },
+  isDeletedFromCalendar: { type: Boolean, default: false },
+  isUpdatedOnCalendar: { type: Boolean, default: false },
 });
 
 const Event = mongoose.model("Event", eventSchema);
