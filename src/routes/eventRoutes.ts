@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 import { verifyUser } from "../middlewares/verifyUser";
 import Event from "../models/Event";
 import { fetchGoogleCalendar } from "../utils/functions/fetchGoogleCalendar";
-import jwt, { JwtPayload } from "jsonwebtoken";
 
 dotenv.config();
 const eventRoutes = e.Router();
@@ -45,11 +44,13 @@ eventRoutes.post("/", verifyUser, async (req, res) => {
 eventRoutes.post("/sync", verifyUser, async (req, res) => {
   const { _id, accessToken } = req.body;
   const email = req.headers.email as string;
+  const allEvents = await Event.find({ email });
+  const events = await fetchGoogleCalendar("GET", accessToken);
   if (!accessToken)
     return res.send({ message: "Must login with google to sync events." });
 
-  // the event is saved at mongodb first then synced to google calendar
-  if (_id) {
+  // if mongodb has more events than google calendar, then add the event to google calendar.
+  if (_id && allEvents.length > events.items.length) {
     const event = await Event.findById(_id);
     if (!event) return res.status(404).send({ message: "Event not found." });
     if (!event?.isSavedToCalendar) {
@@ -66,7 +67,7 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
           priority: event?.priority,
         }
       );
-      console.log(calendarEvent);
+
       event.isSavedToCalendar = true;
       event.id = calendarEvent.id;
       await event.save();
@@ -79,15 +80,14 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
   }
 
   // the event is saved at google calendar first then synced to mongodb
-  const events = await fetchGoogleCalendar("GET", accessToken);
-  const allEvents = await Event.find();
+
   console.log({
     googleEventsLinkInPost: events.items.length,
     mongodbEventsLinkInPost: allEvents.length,
   });
 
-  // compare the events from google calendar and mongodb. if they are not equal then sync the events.
-  if (events.items.length !== allEvents.length) {
+  // if google calendar has more events sync them to mongodb.
+  if (allEvents.length < events.items.length) {
     const savedEvents = events?.items.map(async (event: any) => {
       // save events to mongodb if not already saved.
       const eventExists = await Event.findOne({ id: event.id });
@@ -251,7 +251,6 @@ eventRoutes.put("/:id", verifyUser, async (req, res) => {
 
 eventRoutes.delete("/:id", verifyUser, async (req, res) => {
   const { id } = req.params;
-  console.log(id);
   const event = await Event.findByIdAndDelete(id);
   console.log(event);
   res.send(event);
@@ -259,9 +258,10 @@ eventRoutes.delete("/:id", verifyUser, async (req, res) => {
 
 // send the total number of events from both mongodb and google calendar.
 eventRoutes.post("/count/all", verifyUser, async (req, res) => {
+  const email = req.headers.email as string;
   if (!req.body.accessToken)
     return res.send({ message: "Must login with google to sync events." });
-  const events = await Event.find({});
+  const events = await Event.find({ email });
   const googleEvents = await fetchGoogleCalendar("GET", req.body.accessToken);
   console.log({
     events: events.length,
