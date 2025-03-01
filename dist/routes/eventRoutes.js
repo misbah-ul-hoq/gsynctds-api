@@ -17,7 +17,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const verifyUser_1 = require("../middlewares/verifyUser");
 const Event_1 = __importDefault(require("../models/Event"));
 const fetchGoogleCalendar_1 = require("../utils/functions/fetchGoogleCalendar");
-const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 dotenv_1.default.config();
 const eventRoutes = express_1.default.Router();
 eventRoutes.post("/", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -110,9 +109,10 @@ eventRoutes.post("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 
 // sync the deleted events to google calendar on every render.
 eventRoutes.delete("/sync-all", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { accessToken, _id } = req.body;
+    const email = req.headers.email;
     if (!accessToken)
         return res.send({ message: "Must login with google to sync events." });
-    const events = yield Event_1.default.find();
+    const events = yield Event_1.default.find({ email });
     const googleEvents = yield (0, fetchGoogleCalendar_1.fetchGoogleCalendar)("GET", accessToken);
     const googleItems = googleEvents.items;
     const googleItemsKeys = {};
@@ -161,9 +161,12 @@ eventRoutes.delete("/sync-all", verifyUser_1.verifyUser, (req, res) => __awaiter
 // sync all updated events
 eventRoutes.put("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id, accessToken } = req.body;
+    const email = req.headers.email;
     if (!accessToken)
         return res.send({ message: "Must login with google to sync events." });
     const event = yield Event_1.default.findById(_id);
+    if ((event === null || event === void 0 ? void 0 : event.email) !== email)
+        return res.status(401).send({ message: "Unauthorized." });
     if (!event)
         return res.status(404).send({ message: "Event not found." });
     if (event === null || event === void 0 ? void 0 : event.isSavedToCalendar) {
@@ -196,9 +199,8 @@ eventRoutes.put("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0
     });
 }));
 eventRoutes.get("/", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const authToken = req.headers.authtoken;
-    const isValid = jsonwebtoken_1.default.verify(authToken, process.env.JWT_SECRET);
-    const events = yield Event_1.default.find({});
+    const { email } = req.headers;
+    const events = yield Event_1.default.find({ email });
     res.send(events);
 }));
 eventRoutes.get("/:id", verifyUser_1.verifyUser, (req, res) => __awaiter(void 0, void 0, void 0, function* () {

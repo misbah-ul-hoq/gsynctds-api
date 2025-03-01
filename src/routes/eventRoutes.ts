@@ -118,10 +118,11 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
 // sync the deleted events to google calendar on every render.
 eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
   const { accessToken, _id } = req.body;
+  const email = req.headers.email as string;
   if (!accessToken)
     return res.send({ message: "Must login with google to sync events." });
 
-  const events = await Event.find();
+  const events = await Event.find({ email });
   const googleEvents = await fetchGoogleCalendar("GET", accessToken);
   const googleItems = googleEvents.items;
   const googleItemsKeys: Record<string, string> = {};
@@ -175,10 +176,13 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
 // sync all updated events
 eventRoutes.put("/sync", verifyUser, async (req, res) => {
   const { _id, accessToken } = req.body;
+  const email = req.headers.email as string;
   if (!accessToken)
     return res.send({ message: "Must login with google to sync events." });
 
   const event = await Event.findById(_id);
+  if (event?.email !== email)
+    return res.status(401).send({ message: "Unauthorized." });
   if (!event) return res.status(404).send({ message: "Event not found." });
   if (event?.isSavedToCalendar) {
     const response = await fetch(
