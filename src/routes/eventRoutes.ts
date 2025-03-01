@@ -59,8 +59,6 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
 
   // the event is saved at google calendar first then synced to mongodb
   const events = await fetchGoogleCalendar("GET", accessToken);
-
-  console.log(events);
   const allEvents = await Event.find();
 
   // compare the events from google calendar and mongodb. if they are not equal then sync the events.
@@ -131,7 +129,7 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
   googleEvents.map((event: any) => {
     Event.findOneAndDelete({ id: event.id });
   });
-  return res.send(events);
+  return res.send({ message: "Already synced.", events });
 });
 
 // sync all updated events
