@@ -18,8 +18,14 @@ else {
 app.use((0, cors_1.default)({
     origin,
     credentials: true,
-    allowedHeaders: ["Authorization", "authToken", "Content-Type", "authtoken"],
-    exposedHeaders: ["authToken"],
+    allowedHeaders: [
+        "Authorization",
+        "authToken",
+        "Content-Type",
+        "authtoken",
+        "email",
+    ],
+    exposedHeaders: ["authToken", "email"],
     methods: ["POST", "GET", "PUT", "PATCH", "DELETE"],
 }));
 app.use(express_1.default.json());

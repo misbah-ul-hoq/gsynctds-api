@@ -16,8 +16,14 @@ app.use(
   cors({
     origin,
     credentials: true,
-    allowedHeaders: ["Authorization", "authToken", "Content-Type", "authtoken"],
-    exposedHeaders: ["authToken"],
+    allowedHeaders: [
+      "Authorization",
+      "authToken",
+      "Content-Type",
+      "authtoken",
+      "email",
+    ],
+    exposedHeaders: ["authToken", "email"],
     methods: ["POST", "GET", "PUT", "PATCH", "DELETE"],
   })
 );
