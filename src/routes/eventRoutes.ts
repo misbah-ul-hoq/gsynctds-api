@@ -100,36 +100,40 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
     return res.send({ message: "Must login with google to sync events." });
 
   const event = await Event.findById(_id);
+  const events = await Event.find();
   const syncedEvents = await Event.find({ isSavedToCalendar: true });
-
-  const response = await fetch(
-    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
-  if (!response.ok) {
-    console.log(response);
-    return res
-      .status(500)
-      .send({ message: "Failed to sync events to google calendar." });
+  const googleEvents = await fetchGoogleCalendar("GET", accessToken);
+  const googleItems = googleEvents.items;
+  const googleItemsKeys: Record<string, string> = {};
+  googleItems.forEach((item: any) => {
+    googleItemsKeys[item.id] = item.id;
+  });
+  // if mongodb has more events than google calendar, then the event was deleted from google calendar.
+  if (events.length > googleItems.length) {
+    const toDelete = events.map(async (event) => {
+      if (!googleItemsKeys[event.id]) {
+        await Event.findOneAndDelete({ id: event.id });
+        return googleItemsKeys.hasOwnProperty(event.id);
+      }
+    });
+    return res.send({
+      message: "Events deleted from mongodb and synced to google calendar.",
+    });
   }
 
-  const events = await response.json();
-  const googleEvents = events.items;
+  // if google calendar has more events than mongodb, then the event was deleted from mongodb.
+  if (googleItems.length > events.length) {
+  }
+
   // if all events are deleted from google calendar, delete all events from mongodb.
-  if (googleEvents.length === 0) {
+  if (googleEvents.items.length === 0) {
     await Event.deleteMany({});
-    return res.send({ message: "Events synced to google calendar.", events });
+    return res.send({ message: "Events synced to google calendar." });
   }
-  googleEvents.map((event: any) => {
+  googleEvents.items.map((event: any) => {
     Event.findOneAndDelete({ id: event.id });
   });
-  return res.send({ message: "Already synced.", events });
+  return res.send({ message: "Already synced." });
 });
 
 // sync all updated events
