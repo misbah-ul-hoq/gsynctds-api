@@ -62,19 +62,25 @@ eventRoutes.post("/sync", verifyUser_1.verifyUser, (req, res) => __awaiter(void 
     const events = yield (0, fetchGoogleCalendar_1.fetchGoogleCalendar)("GET", accessToken);
     console.log(events);
     const allEvents = yield Event_1.default.find();
-    // save events to mongodb if not already saved.
+    // compare the events from google calendar and mongodb. if they are not equal then sync the events.
     if (events.items.length !== allEvents.length) {
         const savedEvents = events.items.map((event) => __awaiter(void 0, void 0, void 0, function* () {
-            return yield new Event_1.default({
-                id: event.id,
-                summary: event.summary,
-                description: event.description || " ",
-                start: event.start,
-                end: event.end,
-                status: event.status,
-                priority: event.priority,
-                isSavedToCalendar: true,
-            }).save();
+            // save events to mongodb if not already saved.
+            const eventExists = yield Event_1.default.findOne({ id: event.id });
+            if (eventExists)
+                return eventExists;
+            if (!eventExists) {
+                return yield new Event_1.default({
+                    id: event.id,
+                    summary: event.summary,
+                    description: event.description || " ",
+                    start: event.start,
+                    end: event.end,
+                    status: event.status,
+                    priority: event.priority,
+                    isSavedToCalendar: true,
+                }).save();
+            }
         }));
         return res.send({
             message: "Events synced to mongodb.",

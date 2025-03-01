@@ -62,19 +62,25 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
 
   console.log(events);
   const allEvents = await Event.find();
-  // save events to mongodb if not already saved.
+
+  // compare the events from google calendar and mongodb. if they are not equal then sync the events.
   if (events.items.length !== allEvents.length) {
     const savedEvents = events.items.map(async (event: any) => {
-      return await new Event({
-        id: event.id,
-        summary: event.summary,
-        description: event.description || " ",
-        start: event.start,
-        end: event.end,
-        status: event.status,
-        priority: event.priority,
-        isSavedToCalendar: true,
-      }).save();
+      // save events to mongodb if not already saved.
+      const eventExists = await Event.findOne({ id: event.id });
+      if (eventExists) return eventExists;
+      if (!eventExists) {
+        return await new Event({
+          id: event.id,
+          summary: event.summary,
+          description: event.description || " ",
+          start: event.start,
+          end: event.end,
+          status: event.status,
+          priority: event.priority,
+          isSavedToCalendar: true,
+        }).save();
+      }
     });
     return res.send({
       message: "Events synced to mongodb.",
