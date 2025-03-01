@@ -45,13 +45,26 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
     const event = await Event.findById(_id);
     if (!event) return res.status(404).send({ message: "Event not found." });
     if (!event?.isSavedToCalendar) {
-      const events = await fetchGoogleCalendar("POST", accessToken);
+      const calendarEvent = await fetchGoogleCalendar(
+        "POST",
+        accessToken,
+        undefined,
+        {
+          summary: event?.summary,
+          description: event?.description,
+          start: event?.start,
+          end: event?.end,
+          status: event?.status,
+          priority: event?.priority,
+        }
+      );
+      console.log(calendarEvent);
       event.isSavedToCalendar = true;
-      event.id = events.items.id;
+      event.id = calendarEvent.id;
       await event.save();
       return res.send({
         message: "Event synced to google calendar.",
-        eventFromCalendar: events,
+        eventFromCalendar: calendarEvent,
         eventFromMongoDb: event,
       });
     }
@@ -60,10 +73,14 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
   // the event is saved at google calendar first then synced to mongodb
   const events = await fetchGoogleCalendar("GET", accessToken);
   const allEvents = await Event.find();
+  console.log({
+    googleEventsLinkInPost: events.items.length,
+    mongodbEventsLinkInPost: allEvents.length,
+  });
 
   // compare the events from google calendar and mongodb. if they are not equal then sync the events.
   if (events.items.length !== allEvents.length) {
-    const savedEvents = events.items.map(async (event: any) => {
+    const savedEvents = events?.items.map(async (event: any) => {
       // save events to mongodb if not already saved.
       const eventExists = await Event.findOne({ id: event.id });
       if (eventExists) return eventExists;
@@ -86,8 +103,6 @@ eventRoutes.post("/sync", verifyUser, async (req, res) => {
     });
   }
 
-  // await Promise.all(savedEvents);
-
   res.send({
     message: "Events already synced to google calendar.",
   });
@@ -99,12 +114,14 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
   if (!accessToken)
     return res.send({ message: "Must login with google to sync events." });
 
-  const event = await Event.findById(_id);
   const events = await Event.find();
-  const syncedEvents = await Event.find({ isSavedToCalendar: true });
   const googleEvents = await fetchGoogleCalendar("GET", accessToken);
   const googleItems = googleEvents.items;
   const googleItemsKeys: Record<string, string> = {};
+  console.log({
+    googleEventsLinkInDelete: events.length,
+    mongodbEventsLinkInDelete: googleItems.length,
+  });
   googleItems.forEach((item: any) => {
     googleItemsKeys[item.id] = item.id;
   });
@@ -121,8 +138,22 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
     });
   }
 
+  // events ids in mongodb.
+  const eventsKeys: Record<string, string> = {};
+  events.forEach((event) => {
+    eventsKeys[event.id] = event.id;
+  });
+
   // if google calendar has more events than mongodb, then the event was deleted from mongodb.
   if (googleItems.length > events.length) {
+    googleItems.forEach(async (item: any) => {
+      if (!eventsKeys[item.id]) {
+        await fetchGoogleCalendar("DELETE", accessToken, item.id);
+      }
+    });
+    return res.send({
+      message: "Events deleted from google calendar and synced to mongodb.",
+    });
   }
 
   // if all events are deleted from google calendar, delete all events from mongodb.
@@ -130,9 +161,7 @@ eventRoutes.delete("/sync-all", verifyUser, async (req, res) => {
     await Event.deleteMany({});
     return res.send({ message: "Events synced to google calendar." });
   }
-  googleEvents.items.map((event: any) => {
-    Event.findOneAndDelete({ id: event.id });
-  });
+
   return res.send({ message: "Already synced." });
 });
 
@@ -208,8 +237,28 @@ eventRoutes.put("/:id", verifyUser, async (req, res) => {
 
 eventRoutes.delete("/:id", verifyUser, async (req, res) => {
   const { id } = req.params;
-  const event = await Event.findOneAndDelete({ id });
+  console.log(id);
+  const event = await Event.findByIdAndDelete(id);
+  console.log(event);
   res.send(event);
+});
+
+// send the total number of events from both mongodb and google calendar.
+eventRoutes.post("/count/all", verifyUser, async (req, res) => {
+  if (!req.body.accessToken)
+    return res.send({ message: "Must login with google to sync events." });
+  const events = await Event.find({});
+  const googleEvents = await fetchGoogleCalendar("GET", req.body.accessToken);
+  console.log({
+    events: events.length,
+    googleEvents: googleEvents.items.length,
+    shouldSync: events.length !== googleEvents.items.length,
+  });
+  res.send({
+    events: events.length,
+    googleEvents: googleEvents.items.length,
+    shouldSync: events.length !== googleEvents.items.length,
+  });
 });
 
 export default eventRoutes;

@@ -10,15 +10,20 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchGoogleCalendar = fetchGoogleCalendar;
-function fetchGoogleCalendar(method, accessToken) {
+function fetchGoogleCalendar(method, accessToken, eventId, body) {
     return __awaiter(this, void 0, void 0, function* () {
+        let url = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+        if (method === "DELETE") {
+            url = `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`;
+        }
         try {
-            const response = yield fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+            const response = yield fetch(url, {
                 method,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
+                body: JSON.stringify(body),
             });
             if (!response.ok) {
                 return { message: "Failed to sync events to google calendar." };
